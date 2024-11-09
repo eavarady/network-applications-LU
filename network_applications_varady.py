@@ -123,11 +123,11 @@ class NetworkApplication:
     # Print one line of traceroute output
     def printMultipleResults(self, ttl: int, pkt_keys: list, hop_addrs: dict, rtts: dict, destinationHostname = ''):
         if pkt_keys is None:
-            print(str(ttl) + '   * * *')
+            print(f"{ttl:2}   * * *")
             return
         # Sort packet keys (sequence numbers or UDP ports)
         pkt_keys = sorted(pkt_keys)
-        output = str(ttl) + '   '
+        output = f"{ttl:2}   "
         last_hop_addr = None
         last_hop_name = None
 
@@ -158,7 +158,7 @@ class NetworkApplication:
             output += str(round(1000*rtt, 3))
             output += ' ms  '
                 
-        print(output)           
+        print(output)
 
 class ICMPPing(NetworkApplication):
     
@@ -317,8 +317,7 @@ class ICMPPing(NetworkApplication):
 
         # 6. Return total network delay, ttl, size and sequence number
         return rtt, ttl, packetSize, seq
-#////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-# A partially implemented traceroute 
+
 class Traceroute(ICMPPing):
 
     def __init__(self, args):
@@ -374,7 +373,7 @@ class Traceroute(ICMPPing):
                 sys.exit(1)
             ttl += 1
 
-    # TODO: send 3 ICMP traceroute probes per TTL and collect responses
+    # Send 3 ICMP traceroute probes per TTL and collect responses
     def sendIcmpProbesAndCollectResponses(self, ttl):
  
         hopAddr = None
@@ -493,7 +492,7 @@ class Traceroute(ICMPPing):
 
         return dst_port, icmpType
     
-    # TODO: parse the response to the ICMP probe
+    # Parse the response to the ICMP probe
     def parseICMPTracerouteResponse(self, trReplyPacket):
         
         # 1. Parse the IP header
@@ -569,7 +568,7 @@ class Traceroute(ICMPPing):
         udpSocket.close()
 
         return timeSent
-#////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    
 # TODO: A multi-threaded traceroute implementation
 class MultiThreadedTraceRoute(Traceroute):
 
