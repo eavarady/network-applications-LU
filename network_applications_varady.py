@@ -290,7 +290,7 @@ class ICMPPing(NetworkApplication):
         packet = struct.pack('!BBHHH', ICMP_ECHO_REQUEST, 0, socket.htons(my_checksum), packetID, sequenceNumber)
 
         if ttl is not None:
-            self.icmpSocket.setsockopt(socket.SOL_IP, socket.IP_TTL, ttl)
+            self.icmpSocket.setsockopt(socket.IPPROTO_IP, socket.IP_TTL, ttl)
 
         # 4. Send packet using socket
         self.icmpSocket.sendto(packet+data, (destinationAddress, 1))
@@ -340,7 +340,7 @@ class Traceroute(ICMPPing):
         # 3. Create a raw socket bound to ICMP protocol
         self.icmpSocket = None
         try:
-            self.icmpSocket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_ICMP)
+            self.icmpSocket = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.getprotobyname("icmp"))
         except socket.error as err:
             traceback.print_exception(err)
             exit(1)
