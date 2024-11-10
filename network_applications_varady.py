@@ -472,16 +472,20 @@ class Traceroute(ICMPPing):
         rtts = dict()
         ttl = 1
 
-        while ttl <= MAX_TTL and self.isDestinationReached == False:
-            if args.protocol == "icmp":
-                self.sendIcmpProbesAndCollectResponses(ttl)
+        try:
+            while ttl <= MAX_TTL and self.isDestinationReached == False:
+                if args.protocol == "icmp":
+                    self.sendIcmpProbesAndCollectResponses(ttl)
 
-            elif args.protocol == "udp":
-                self.sendUdpProbesAndCollectResponses(ttl)
-            else:
-                print(f"Error: invalid protocol {args.protocol}. Use udp or icmp")
-                sys.exit(1)
-            ttl += 1
+                elif args.protocol == "udp":
+                    self.sendUdpProbesAndCollectResponses(ttl)
+                else:
+                    print(f"Error: invalid protocol {args.protocol}. Use udp or icmp")
+                    sys.exit(1)
+                ttl += 1
+        except KeyboardInterrupt:
+            print("\nKeyboard Interrupt")
+            sys.exit(0)
 
     # Send 3 ICMP traceroute probes per TTL and collect responses
     def sendIcmpProbesAndCollectResponses(self, ttl):
