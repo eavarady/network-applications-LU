@@ -918,7 +918,90 @@ class Proxy(NetworkApplication):
     def __init__(self, args):
         print("Web Proxy starting on port: %i..." % (args.port))
 
-        pass  # TODO: Remove this once this method is implemented
+        # 1. Create cache to store responses
+        self.cache = {}
+
+        # 2. Create a TCP socket for the proxy server
+        proxySocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        # 3. Bind the proxy server socket to the port given by user
+        proxySocket.bind(("", args.port))
+
+        # 4. Continuously listen for connections
+        proxySocket.listen(100)
+        print(f"Proxy server listening on port {args.port}")
+
+        while True:
+            # 5. Accept incoming connections
+            connectionSocket, addr = proxySocket.accept()
+            print(f"Proxy connection established with {addr}")
+
+            # 6. Create a new thread to handle each client request
+            threading.Thread(
+                target=self.handleRequest, args=(connectionSocket,)
+            ).start()
+
+        # Close proxy socket if the loop is ever broken
+        proxySocket.close()
+
+    def handleRequest(self, connectionSocket):
+        try:
+            # 1. Receive request message from the client
+            message = connectionSocket.recv(MAX_DATA_RECV).decode()
+
+            # 2. Extract the path of the requested object from the message (second part of the HTTP header)
+            filename = message.split()[1]
+
+            # 3. Check the cache for object:
+            # Cache hit: Send to client / Cache miss: Request from server, cache response then send to client
+            if filename in self.cache:
+                print(f"Cache hit for {filename}")
+                response = self.cache[filename]
+            else:
+                print(f"Cache miss for {filename}, fetching from server")
+                # Create temporary buffer to store responses from server
+                buffer = []
+
+                # TODO Get hostname from request message
+                hostname = None
+
+                # Connect to server, send request and set socket timeout
+                serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                serverSocket.connect((hostname, 80))
+                serverSocket.send(message.encode())
+                serverSocket.settimeout(5)
+
+                # Receive response from the server
+                try:
+                    while True:
+                        response_received = serverSocket.recv(4096)
+
+                        if not response_received:
+                            break
+
+                        buffer.append(response_received)
+
+                except socket.timeout:
+                    print("TimeoutError")
+                    pass
+
+                response = b"".join(buffer)
+
+                # Cache the response, request message as index
+                self.cache[message] = response
+
+                # Close the connection socket with server
+                serverSocket.close()
+
+            # Send the content of the file to the client socket
+            connectionSocket.send(response.encode())
+
+        except Exception as e:
+            print(f"Error handling request: {e}")
+
+        finally:
+            # Close the connection socket with client
+            connectionSocket.close()
 
 
 # NOTE: Do NOT delete the code below
@@ -926,3 +1009,4 @@ if __name__ == "__main__":
 
     args = setupArgumentParser()
     args.func(args)
+
