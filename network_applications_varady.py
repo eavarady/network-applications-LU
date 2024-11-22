@@ -962,8 +962,15 @@ class Proxy(NetworkApplication):
                 # Create temporary buffer to store responses from server
                 buffer = []
 
-                # TODO Get hostname from request message
+                # Get hostname from request message
                 hostname = None
+                lines = message.split("\r\n")
+                for line in lines:
+                    if line.startswith("Host:"):
+                        hostname = line.split()[1]
+                        break
+                if hostname == None:
+                    raise ValueError("Host header not found in request")
 
                 # Connect to server, send request and set socket timeout
                 serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -987,14 +994,14 @@ class Proxy(NetworkApplication):
 
                 response = b"".join(buffer)
 
-                # Cache the response, request message as index
-                self.cache[message] = response
+                # Cache the response
+                self.cache[filename] = response
 
                 # Close the connection socket with server
                 serverSocket.close()
 
             # Send the content of the file to the client socket
-            connectionSocket.send(response.encode())
+            connectionSocket.send(response)  # .encode()?
 
         except Exception as e:
             print(f"Error handling request: {e}")
@@ -1009,4 +1016,3 @@ if __name__ == "__main__":
 
     args = setupArgumentParser()
     args.func(args)
-
